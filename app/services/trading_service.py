@@ -144,7 +144,8 @@ def buy_from_marketplace(buyer_team_id: int, offer_id: int, units_to_buy: int) -
         buyer.current_balance -= total_cost
         seller.current_balance += total_cost
         seller_inventory.material_units -= units_to_buy
-        buyer_inventory.material_units += units_to_buy
+        # Add purchased units to buyer's RAW_UNITS (so they can be used for production)
+        buyer_inventory.raw_units += units_to_buy
         offer.material_units_available -= units_to_buy
         
         if offer.material_units_available == 0:
@@ -320,7 +321,8 @@ def accept_trade_request(request_id: int, accepting_team_id: int) -> dict:
         buyer.current_balance -= trade.total_offer_amount
         seller.current_balance += trade.total_offer_amount
         seller_inventory.material_units -= trade.units_requested
-        buyer_inventory.material_units += trade.units_requested
+        # Add purchased units to buyer's RAW_UNITS (so they can be used for production)
+        buyer_inventory.raw_units += trade.units_requested
         
         trade.status = TradeStatus.ACCEPTED
         trade.updated_at = datetime.utcnow()
