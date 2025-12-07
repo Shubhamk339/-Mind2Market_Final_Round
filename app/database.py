@@ -3,13 +3,21 @@ Database configuration and session management using SQLAlchemy.
 """
 
 import os
+import tempfile
 from contextlib import contextmanager
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
 # Database file path
-# For Streamlit Cloud, the database file is stored in the same directory as the app
-DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "trading_simulation.db")
+# Streamlit Cloud runs in a read-only filesystem, so we need to use a writable location
+# Check if running on Streamlit Cloud (STREAMLIT_SHARING_MODE is set in cloud environment)
+if os.environ.get("STREAMLIT_SHARING_MODE") or os.environ.get("STREAMLIT_SERVER_HEADLESS"):
+    # Use temp directory for Streamlit Cloud
+    DB_PATH = os.path.join(tempfile.gettempdir(), "trading_simulation.db")
+else:
+    # Local development
+    DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "trading_simulation.db")
+
 DATABASE_URL = f"sqlite:///{DB_PATH}"
 
 # Create engine
