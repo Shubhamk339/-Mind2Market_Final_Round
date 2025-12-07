@@ -1,0 +1,24 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Database
+*.db
+
+# IDE
+.vscode/
+.idea/
+
+# Environment
+.env
+venv/
+env/
+
+# Generated docs
+generate_*.py
+Trading_Simulation_*.docx
+
+# OS
+.DS_Store
+Thumbs.db
