@@ -10,7 +10,6 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 
 from app.auth import login_user, is_authenticated
 
-st.set_page_config(page_title="Login - Trading Simulation", page_icon="🔐", layout="centered")
 
 st.title("🔐 Login")
 
@@ -47,6 +46,7 @@ else:
                     st.session_state["team_name"] = result["team_name"]
                     st.session_state["industry"] = result["industry"]
                     st.session_state["is_admin"] = result["is_admin"]
+                    st.session_state["is_super_admin"] = result.get("is_super_admin", False)
                     
                     st.success(f"✅ Welcome, {result['team_name']}!")
                     st.rerun()

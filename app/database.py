@@ -7,21 +7,34 @@ import tempfile
 from contextlib import contextmanager
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
+import streamlit as st
 
-# Database file path
-# Streamlit Cloud runs in a read-only filesystem, so we need to use a writable location
-# Check if running on Streamlit Cloud (STREAMLIT_SHARING_MODE is set in cloud environment)
-if os.environ.get("STREAMLIT_SHARING_MODE") or os.environ.get("STREAMLIT_SERVER_HEADLESS"):
-    # Use temp directory for Streamlit Cloud
-    DB_PATH = os.path.join(tempfile.gettempdir(), "trading_simulation.db")
+# Database Selection Logic
+# 1. Try to get DATABASE_URL from Streamlit secrets (for Cloud/Local with secrets)
+# 2. Try to get DATABASE_URL from environment variables (for Docker/Vercel)
+# 3. Fallback to SQLite (localdev/testing)
+
+if "DATABASE_URL" in st.secrets:
+    DATABASE_URL = st.secrets["DATABASE_URL"]
+elif "DATABASE_URL" in os.environ:
+    DATABASE_URL = os.environ["DATABASE_URL"]
 else:
-    # Local development
-    DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "trading_simulation.db")
+    # Local development fallback
+    if os.environ.get("STREAMLIT_SHARING_MODE") or os.environ.get("STREAMLIT_SERVER_HEADLESS"):
+         DB_PATH = os.path.join(tempfile.gettempdir(), "trading_simulation.db")
+    else:
+         DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "trading_simulation.db")
+    DATABASE_URL = f"sqlite:///{DB_PATH}"
 
-DATABASE_URL = f"sqlite:///{DB_PATH}"
+# Fix for "postgres://" in SQLAlchemy (needs "postgresql://")
+if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
 # Create engine
-engine = create_engine(DATABASE_URL, echo=False, connect_args={"check_same_thread": False})
+# valid_connect_args for SQLite only
+connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
+
+engine = create_engine(DATABASE_URL, echo=False, connect_args=connect_args)
 
 # Create session factory
 # expire_on_commit=False prevents DetachedInstanceError when accessing objects after session closes
